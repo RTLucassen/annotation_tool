@@ -33,7 +33,7 @@ The table below lists the buttons of the annotation tool with the corresponding 
 |**Previous image**|<img src="src/annotation_tool/icons/left_arrow_icon.png" height="30%" width="30%">|`<LeftArrow>`|Go back to the previous image (if available).|
 |**Add layer**|<img src="src/annotation_tool/icons/plus_icon.png" height="30%" width="30%">|`<n>`|Add a new annotation layer (if this is enabled).|
 |**Fill encircled**|<img src="src/annotation_tool/icons/circle_empty_icon.png" height="30%" width="30%">|`<f>`|Enable/disable automatically filling the encircled region if the end of the drawn line connects to the start.|
-|**Threshold image**|<img src="src/annotation_tool/icons/threshold_icon.png" height="30%" width="30%">|`<m>`|Annotate all pixels of the image (in grayscale) that subceed the threshold value.|
+|**Threshold image**|<img src="src/annotation_tool/icons/threshold_icon.png" height="30%" width="30%">|`<t>`|Annotate all pixels of the image (in grayscale) that subceed the threshold value.|
 |**Invert annotation**|<img src="src/annotation_tool/icons/invert_color_icon.png" height="30%" width="30%">|`<i>`|Invert the annotation (foreground becomes background and background becomes foreground).|
 |**Undo action**|<img src="src/annotation_tool/icons/undo_icon.png" height="30%" width="30%">|`<z>`|Undo the last action. By default, the last 20 actions can be reverted.|
 |**Clear annotation**|<img src="src/annotation_tool/icons/delete_icon.png" height="30%" width="30%">|`<c>`|Clear the annotation. For layers added using the '+' button, if no annotation is present, remove the layer.|
