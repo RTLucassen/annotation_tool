@@ -1,0 +1,6 @@
+annotation_tool_venv
+__pycache__
+*.egg-info
+
+test.py
+test_images

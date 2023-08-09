@@ -1,0 +1,8 @@
+matplotlib==3.5.2
+numpy==1.23.1
+Pillow==9.2.0
+pyglet==2.0.7
+scikit-image==0.19.3 
+SimpleITK==2.2.0
+sv-ttk==1.0
+tk==0.1.0
