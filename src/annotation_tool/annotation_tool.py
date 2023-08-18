@@ -159,8 +159,8 @@ class CanvasImage:
     Display image and facilitate annotation. 
     
     Attributes:
-        parent: parent instance.
-        container: container widget for canvas.
+        parent:  Parent instance.
+        container:  Container widget for canvas.
     """
     # define class attributes
     __gain = 1  # panning speed
@@ -181,7 +181,7 @@ class CanvasImage:
         Initialize the canvas with the image for annotation.
         
         Args:
-            parent: parent instance
+            parent:  Parent instance.
         """      
         # initialize instance attribute
         self.parent = parent
@@ -238,6 +238,7 @@ class CanvasImage:
         # focus on the canvas
         self.__canvas.focus_set()
 
+
     def __lb_press(self, event: tkinter.Event) -> None:
         """
         Record the location of the canvas if the image is zoomed in,
@@ -258,8 +259,9 @@ class CanvasImage:
         else:
             self.__canvas.scan_mark(event.x, event.y)
  
+
     def __rb_press(self, event: tkinter.Event) -> None:
-        """
+        """ 
         Disable the spacebar when in drawing mode if it is not pressed.
         """
         # check if an image has been loaded
@@ -273,9 +275,11 @@ class CanvasImage:
             self.__tool = 'eraser'
             self.__paint(event, self.parent.background_color)
 
+
     def __lb_motion(self, event: tkinter.Event) -> None:
         """
-        Move the canvas, or when in drawing mode, add to the line in progress (drawing).
+        Move the canvas, or when in drawing mode, add to the line in progress 
+        (drawing).
         """
         # check if an image has been loaded
         if not self.__image_loaded: return
@@ -297,6 +301,7 @@ class CanvasImage:
             self.__canvas.scan_dragto(event.x, event.y, gain=self.__gain)
             self.__show_image()
 
+
     def __rb_motion(self, event: tkinter.Event) -> None:
         """
         If in drawing mode, add to the line in progress (erasing).
@@ -309,6 +314,7 @@ class CanvasImage:
             self.__space_disabled and not self.parent.hide_annotation):
             self.__paint(event, self.parent.background_color)
 
+
     def __motion(self, event: tkinter.Event) -> None:
         """
         Update the circle that indicates the brush size if in drawing mode.
@@ -318,6 +324,7 @@ class CanvasImage:
 
         if self.parent.drawing_mode:
             self.__update_circle(event)
+
 
     def __wheel(self, event: tkinter.Event) -> None:
         """
@@ -373,6 +380,7 @@ class CanvasImage:
                 self.__canvas.scale('all', x, y, factor, factor) 
                 self.__show_image()
         
+
     def __keypress(self, event: tkinter.Event) -> None:
         """
         Update state attributes when the spacebar or control key is pressed.
@@ -391,6 +399,7 @@ class CanvasImage:
             self.__space = True
             self.__remove_circle()
 
+
     def __keyrelease(self, event: tkinter.Event) -> None:
         """
         Update state attributes when the spacebar or control key is released.
@@ -405,6 +414,7 @@ class CanvasImage:
                 self.__remove_circle()
         elif event.keysym_num == 32 and self.__space == True:  # <SPACE>
             self.__space = False
+
 
     def __show_image(self) -> None:
         """
@@ -482,6 +492,7 @@ class CanvasImage:
         self.__canvas.lower(imageid)  
         self.__canvas.imagetk = imagetk  
 
+
     def __create_circle(self, event: tkinter.Event) -> None:
         """
         Create the circle that indicates the brush size.
@@ -502,6 +513,7 @@ class CanvasImage:
             outline="black",
         )
 
+
     def __remove_circle(self) -> None:
         """
         Remove the circle that indicates the brush size to make it invisible.
@@ -511,6 +523,7 @@ class CanvasImage:
 
         self.__canvas.delete(self.__circle)
     
+
     def __update_circle(self, event: tkinter.Event) -> None:
         """
         Remove the old circle and create a new one for showing the brush size.      
@@ -522,13 +535,14 @@ class CanvasImage:
             self.__remove_circle()
             self.__create_circle(event)
 
+
     def __draw_line(self, color: str) -> None:
         """
         Add the drawn line to the annotation image, 
         accounting for the image scale and field of view.
 
         Args:
-            color: name of color (either 'black' or 'white').
+            color:  Name of color (either 'black' or 'white').
         """
         # check if an image has been loaded
         if not self.__image_loaded: return
@@ -639,12 +653,13 @@ class CanvasImage:
         # show the updated annotation on top of the original image        
         self.__show_image()
 
+
     def __paint(self, event: tkinter.Event, color: str) -> None:
         """
         Paint a line on the canvas.
 
         Args:
-            color: name of color (either 'black' or 'white').
+            color:  Name of color (either 'black' or 'white').
         """
         # check if an image has been loaded
         if not self.__image_loaded: return
@@ -683,6 +698,7 @@ class CanvasImage:
         self.__old_x = x
         self.__old_y = y
 
+
     def __lift(self, color: str) -> None:
         """
         Lift the brush of the canvas to stop drawing or erasing.
@@ -690,7 +706,7 @@ class CanvasImage:
         delete it from the canvas.
 
         Args:
-            color: name of color (either 'black' or 'white').
+            color:  Name of color (either 'black' or 'white').
         """
         # check if an image has been loaded
         if not self.__image_loaded: return
@@ -711,6 +727,7 @@ class CanvasImage:
                 for l in self.__line:
                     self.__canvas.delete(l)
 
+
     def grid(self, **kw) -> None:
         """ 
         Put the CanvasImage widget on the parent widget.
@@ -720,12 +737,14 @@ class CanvasImage:
         self.container.rowconfigure(0, weight=1)
         self.container.columnconfigure(0, weight=1)
 
+
     def pack(self, **kw) -> None:
         """
         Exception: cannot use pack with this widget. 
         """
         message = f'Cannot use place with the widget {self.__class__.__name__}.'
         raise Exception(message)
+
 
     def place(self, **kw) -> None:
         """ 
@@ -734,6 +753,7 @@ class CanvasImage:
         message = f'Cannot use place with the widget {self.__class__.__name__}.'
         raise Exception(message)
           
+
     def load_image(self) -> None:
         """
         Load the image from image_path, optionally load prior annotations
@@ -883,6 +903,7 @@ class CanvasImage:
             )
         self.reset_view()
 
+
     def add_annotation(
         self, 
         layer: str, 
@@ -893,8 +914,8 @@ class CanvasImage:
         If None was provided, create an empty one.
 
         Args:
-            layer: name of layer.
-            annotation: image with annotations.
+            layer:  Name of layer.
+            annotation:  Image with annotations.
         """
         # create an empty annotation image if None was provided
         if annotation is None:
@@ -902,29 +923,35 @@ class CanvasImage:
         # add annotation image to dictionary
         self.__annotations[layer] = (ImageDraw.Draw(annotation), annotation)
 
+
     def remove_annotation(self, layer: str) -> None:
         del self.__annotations[layer]
+
 
     def is_empty(self, layer: str) -> bool:
         """
         Check if the current annotation is empty (i.e., nothing is drawn).
 
         Args:
-            layer: name of layer.
+            layer:  Name of layer.
         """
         if np.sum(np.asarray(self.__annotations[layer][1])) == 0:
             return True  
         else:
             return False
 
+
     def get_min_zoom(self) -> float:
         return self.__min_zoom
-    
+
+
     def get_selected_layer(self) -> str:
         return self.__selected_layer
 
+
     def get_tool(self) -> str:
         return self.__tool
+
 
     def undo_action(self) -> None:
         """
@@ -956,6 +983,7 @@ class CanvasImage:
                 # show the image after the view has been reset   
                 self.__show_image()
 
+
     def clear_annotation(self) -> None:
         """
         Clear the currently selected annotation if in drawing mode.
@@ -984,6 +1012,7 @@ class CanvasImage:
             
             # show the updated annotation on top of the original image     
             self.__show_image()
+
 
     def threshold_image(self, filter_size: int = 5) -> None:
         """
@@ -1046,6 +1075,7 @@ class CanvasImage:
             # show the annotation on top of the original image     
             self.__show_image()
 
+
     def invert_annotation(self) -> None:
         """
         Create annotation by inverting the current annotation.
@@ -1077,6 +1107,7 @@ class CanvasImage:
             # show the annotation on top of the original image     
             self.__show_image()
 
+
     def hide_annotation(self) -> None:
         """
         Hide or unhide the annotation.
@@ -1099,12 +1130,13 @@ class CanvasImage:
             # show the annotation on top of the original image     
             self.__show_image()
 
+
     def update_color(self, level: str) -> None:
         """
         Change the color or opacity of the foreground or background annotation.
 
         Args:
-            level: name of level (either 'foreground' or 'background').
+            level:  Name of level (either 'foreground' or 'background').
         """
         # check if an image has been loaded
         if not self.__image_loaded: return
@@ -1136,6 +1168,7 @@ class CanvasImage:
         )
         # show the updated annotation on top of the original image        
         self.__show_image()
+
 
     def reset_view(self) -> None:
         """
@@ -1178,12 +1211,13 @@ class CanvasImage:
 
             self.__show_image()
 
+
     def switch_layer(self, layer: str) -> None:
         """
         Switch between annotation layers.
 
         Args:
-            layer: name of layer.
+            layer:  Name of layer.
         """
         # check if an image has been loaded
         if not self.__image_loaded: return
@@ -1202,14 +1236,15 @@ class CanvasImage:
             # show the image after the layer has been switched   
             self.__show_image()
 
+
     def save_annotations(self, check_buffer: bool = False) -> None:
         """
         Save the annotations as separate channels of a .tiff image 
         or as separate images.
 
         Args:
-            check_buffer: indicates whether atleast one action must be performed
-                          on the image before it is saved.
+            check_buffer: Indicates whether atleast one action must be performed
+                on the image before it is saved.
         """
         # check if an image has been loaded
         if not self.__image_loaded: return
@@ -1291,8 +1326,8 @@ class ControlButtons:
     hide / unhide the annotation, and go to the next or previous image.
     
     Attributes:
-        parent: parent instance
-        container: widget that groups all control buttons.    
+        parent:  Parent instance
+        container:  Widget that groups all control buttons.    
     """
 
     def __init__(self, parent: tkinter.Tk) -> None:
@@ -1300,7 +1335,7 @@ class ControlButtons:
         Initialize the control buttons.
 
         Args:
-            parent: parent instance.
+            parent:  Parent instance.
         """
         # initialize instance attribute for parent
         self.parent = parent
@@ -1379,11 +1414,13 @@ class ControlButtons:
         else:
             self.__inspect_button.state(['disabled'])
 
+
     def grid(self, **kw) -> None:
         """ 
         Put the ControlButtons on the parent widget.
         """
         self.container.grid(**kw)
+
 
     def pack(self, **kw) -> None:
         """
@@ -1392,6 +1429,7 @@ class ControlButtons:
         message = f'Cannot use pack with the widget {self.__class__.__name__}.'
         raise Exception(message)
 
+
     def place(self, **kw) -> None:
         """
         Exception: cannot use place with this widget.
@@ -1399,6 +1437,7 @@ class ControlButtons:
         message = f'Cannot use pack with the widget {self.__class__.__name__}.'
         raise Exception(message)
     
+
     def switch_mode(self) -> None:
         """
         Switch between the inspection and drawing mode if the button of 
@@ -1415,6 +1454,7 @@ class ControlButtons:
             self.__inspect_button.state(['disabled'])
             self.__draw_button.state(['!disabled'])
             self.parent.annotation_buttons.change_button_state(['disabled'])
+
 
     def change_visibility(self) -> None:
         """
@@ -1433,6 +1473,7 @@ class ControlButtons:
         
             # hide or unhide annotation
             self.parent.canvas.hide_annotation()
+
 
     def load_previous_image(self) -> None:
         """
@@ -1467,6 +1508,7 @@ class ControlButtons:
             self.parent.layer_buttons.initialize_extra_buttons()
             # change the state to indicate that the image has been changed 
             self.__changing_image = False
+
 
     def load_next_image(self) -> None:
         """
@@ -1509,8 +1551,8 @@ class LayerButtons:
     more annotation layers in scrollable area.
     
     Attributes:
-        parent: parent instance.
-        container: widget that groups all layer buttons. 
+        parent:  Parent instance.
+        container:  Widget that groups all layer buttons. 
     """
     # default values for layout
     __minimum_to_screen_width_ratio = 0.2
@@ -1522,7 +1564,7 @@ class LayerButtons:
         Initialize the layer buttons.
         
         Args:
-            parent: parent instance.
+            parent:  Parent instance.
         """
         # initialize instance attribute for parent
         self.parent = parent
@@ -1593,11 +1635,13 @@ class LayerButtons:
             self.__show_scrollbar = False
             self.__scrollbar.grid_remove()
 
+
     def grid(self, **kw) -> None:
         """ 
         Put the LayerButtons on the parent widget.
         """
         self.container.grid(**kw)
+
 
     def pack(self, **kw) -> None:
         """
@@ -1606,12 +1650,14 @@ class LayerButtons:
         message = f'Cannot use pack with the widget {self.__class__.__name__}.'
         raise Exception(message)
 
+
     def place(self, **kw) -> None:
         """
         Exception: cannot use place with this widget.
         """
         message = f'Cannot use pack with the widget {self.__class__.__name__}.'
         raise Exception(message)
+
 
     def __bound_to_mousewheel(self, event: tkinter.Event) -> None:
         """
@@ -1621,6 +1667,7 @@ class LayerButtons:
         self.__canvas.bind_all("<Button-4>", self.__wheel)
         self.__canvas.bind_all("<Button-5>", self.__wheel)
 
+
     def __unbound_to_mousewheel(self, event: tkinter.Event) -> None:
         """
         When the cursor leaves the canvas, unbind the mousewheel events.
@@ -1629,16 +1676,17 @@ class LayerButtons:
         self.__canvas.unbind_all("<Button-4>")
         self.__canvas.unbind_all("<Button-5>")
 
+
     def __wheel(self, event) -> None:
         """
-        When the cursor is inside the canvas, 
-        scroll to move the buttons left or right.
+        When the cursor is inside the canvas, scroll to move the buttons left or right.
         """
         if event.num == 5 or event.delta == -120:  # scroll down
             self.__canvas.xview_scroll(self.__step, "units")
         elif event.num == 4 or event.delta == 120:  # scroll up
             self.__canvas.xview_scroll(-self.__step, "units")
         
+
     def switch_layer_wrapper(
         self, 
         event: Optional[tkinter.Event], 
@@ -1672,12 +1720,13 @@ class LayerButtons:
             else:
                 button.state(['!disabled'])
 
+
     def __add_extra_button(self, layer: str) -> None:
         """
         Add button for extra layer.
        
         Args:
-            layer: name of extra layer.
+            layer:  Name of extra layer.
         """
         # change the name of the "+" button
         self.__buttons[-1].configure(text=layer)
@@ -1700,14 +1749,15 @@ class LayerButtons:
         self.__canvas.update()
         self.__canvas.xview_moveto(self.__canvas.winfo_width())
 
+
     def __remove_extra_button(self, layer: str, select_prior: bool) -> None:
         """
         Remove the button for the extra layer.
         
         Args:
-            layer: name of extra layer.
-            select_prior: indicates whether the prior button should be disabled
-                          and the prior layer should be selected.
+            layer:  Name of extra layer.
+            select_prior:  Indicates whether the prior button should be disabled
+                and the prior layer should be selected.
         """
         # get the index of the button that should be removed
         index = self.parent.layers.index(layer)
@@ -1727,6 +1777,7 @@ class LayerButtons:
         for i in range(index, len(self.parent.layers)):
             self.__buttons[i].grid(row=0, column=i) 
 
+
     def remove_extra_buttons(self) -> None:
         """
         Remove all buttons for extra layers.
@@ -1742,6 +1793,7 @@ class LayerButtons:
             self.__remove_extra_button(layer, select_prior=select_prior)
             self.parent.layers.remove_extra_layer(layer)
 
+
     def initialize_extra_buttons(self) -> None:
         """
         Add a button for each extra layer.
@@ -1749,6 +1801,7 @@ class LayerButtons:
         # add a button for each extra layer
         for layer in self.parent.layers.extra:
             self.__add_extra_button(layer)
+
 
     def clear_annotation_else_remove_button(self) -> None:
         """
@@ -1768,20 +1821,27 @@ class LayerButtons:
             if layer in self.parent.layers:
                 self.parent.canvas.clear_annotation()
 
+
     def configure(self) -> None:
-        """ Configure the canvas height of widget."""
+        """ 
+        Configure the canvas height of widget.
+        """
         ypad = floor(self.parent.get_header_padding()/2)
         self.__canvas.configure(height=self.__buttons[0].winfo_height()+ypad)
+
 
     def get_minimum_width(self) -> int:
         return int(self.parent.canvas_dimensions[0]
                    * self.__minimum_to_screen_width_ratio)
 
+
     def get_scrollbar_status(self) -> int:
         return self.__show_scrollbar
 
+
     def reset_canvas(self) -> None:
         self.__canvas.xview_moveto(0)
+
 
     def resize_canvas(self) -> None:
         """
@@ -1812,8 +1872,8 @@ class AnnotationButtons:
     Set of buttons for annotation actions.
     
     Attributes:
-        parent: parent instance.
-        container: widget that groups all annotation buttons.
+        parent:  Parent instance.
+        container:  Widget that groups all annotation buttons.
     """
 
     def __init__(self, parent: tkinter.Tk) -> None:
@@ -1821,7 +1881,7 @@ class AnnotationButtons:
         Initialize the annotation buttons.
         
         Args:
-            parent: parent instance.
+            parent:  Parent instance.
         """
         # initialize instance attribute for parent
         self.parent = parent
@@ -1898,11 +1958,13 @@ class AnnotationButtons:
         if not self.parent.drawing_mode:
             self.change_button_state(['disabled'])
 
+
     def grid(self, **kw) -> None:
         """ 
         Put the AnnotationButtons on the parent widget.
         """
         self.container.grid(**kw)
+
 
     def pack(self, **kw) -> None:
         """ 
@@ -1911,12 +1973,14 @@ class AnnotationButtons:
         message = f'Cannot use pack with the widget {self.__class__.__name__}.'
         raise Exception(message)
 
+
     def place(self, **kw) -> None:
         """ 
         Exception: cannot use place with this widget.
         """
         message = f'Cannot use pack with the widget {self.__class__.__name__}.'
         raise Exception(message)
+
 
     def change_auto_fill(self) -> None:
         """
@@ -1933,12 +1997,13 @@ class AnnotationButtons:
                 self.__fill_button.configure(image=self.parent.icons['fill_off_button'])
                 self.__fill_button.image = self.parent.icons['fill_off_button']
 
+
     def change_button_state(self, state: list) -> None:
         """
         Change the state of the buttons (except for the save and settings buttons).
 
         Args:
-            state: tkinter statespec, i.e. ['disabled'] or ['!disabled'].
+            state:  Tkinter statespec, i.e. ['disabled'] or ['!disabled'].
         """
         # define list of buttons (except for the save and settings buttons)
         buttons = [
@@ -1950,6 +2015,7 @@ class AnnotationButtons:
         ]
         for button in buttons:
             button.state(state)
+
 
     def open_settings_window(self) -> None:
         """
@@ -1969,8 +2035,8 @@ class SettingsWindow(tk.Toplevel):
     containing settings that can be adjusted by the user.
     
     Attributes:
-        parent: parent instance
-        window: top level window. 
+        parent:  Parent instance
+        window:  Top level window. 
     """
     # default values for layout
     __height_window_to_screen_ratio = 0.58
@@ -1981,7 +2047,7 @@ class SettingsWindow(tk.Toplevel):
         Initialize the settings slides.
         
         Args:
-            parent: parent instance.
+            parent:  Parent instance.
         """
         super().__init__()
 
@@ -2158,26 +2224,39 @@ class SettingsWindow(tk.Toplevel):
         # window is closed when mouse leaves settings window
         self.bind('<Leave>', self.__close)
 
+
     def __close(self, event) -> None:
-        """ Close the window."""
+        """ 
+        Close the window.
+        """
         widget = [item for item in str(event.widget).split('.!') if item != '']
         if len(widget) == 1 and 'settingswindow' in widget[0]:
             self.parent.active_settings_window = False
             self.destroy()
 
+
     def close_window(self) -> None:
-        """ Close the window."""
+        """ 
+        Close the window.
+        """
         self.parent.active_settings_window = False
         self.destroy()
 
+
     def update_threshold(self) -> None:
-        """ Update the state attribute with the current threshold slider value."""
+        """ 
+        Update the state attribute with the current threshold slider value.
+        """
         self.parent.threshold = self.__threshold.get()
         self.__threshold_label.configure(text=f'Threshold: {self.parent.threshold:0.2f}')
-    
+
+
     def update_threshold_image(self) -> None:
-        """ Update the state attribute with the image to use for thresholding."""
+        """ 
+        Update the state attribute with the image to use for thresholding.
+        """
         self.parent.image_for_thresholding = self.__radio_buttons_var.get()
+
 
     def update_color(self, level: str) -> None:
         """
@@ -2195,23 +2274,30 @@ class SettingsWindow(tk.Toplevel):
         # apply the opacity change
         self.parent.canvas.update_color(level)
 
+
     def update_checkboxes(self) -> None:
-        """ Update the state attributes with the checkbox values."""
+        """ 
+        Update the state attributes with the checkbox values.
+        """
         self.parent.invert_thresholding = self.__invert_var.get()
         self.parent.erase_only_thresholding = self.__erase_only_var.get()
         self.parent.closing_after_thresholding = self.__closing_var.get()
 
+
     def update_tolerance(self) -> None:
-        """ Update the state attribute with the current tolerance slider value."""
+        """ 
+        Update the state attribute with the current tolerance slider value.
+        """
         self.parent.tolerance = self.__tolerance.get()
         self.__tolerance_label.configure(text=f'Tolerance: {self.parent.tolerance:0.2f}')
+
 
 class ColorPicker:
     """
     Widget for selecting a color.
     
     Attributes:
-        parent: parent instance.
+        parent:  Parent instance.
     """
 
     def __init__(self, parent: tkinter.Tk, level: str) -> None:
@@ -2219,8 +2305,8 @@ class ColorPicker:
         Initialize color picker.
         
         Args:
-            parent: parent object
-            level: foreground or background.
+            parent:  Parent object
+            level:  'foreground' or 'background' level.
         """
         # initialize instance attributes
         self.parent = parent
@@ -2279,11 +2365,13 @@ class ColorPicker:
         self.__B_slider.grid(row=2, column=2, sticky='ew')
         self.__B_slider.bind('<ButtonRelease>', lambda event: self.update_color())
 
+
     def grid(self, **kw) -> None:
         """ 
         Put the CanvasImage widget on the parent widget.
         """
         self.__frame.grid(**kw)
+
 
     def pack(self, **kw) -> None:
         """ 
@@ -2292,12 +2380,14 @@ class ColorPicker:
         message = f'Cannot use pack with the widget {self.__class__.__name__}.'
         raise Exception(message)
 
+
     def place(self, **kw) -> None:
         """ 
         Exception: cannot use place with this widget.
         """
         message = f'Cannot use pack with the widget {self.__class__.__name__}.'
         raise Exception(message)
+
 
     def update_color(self) -> None:
         """
@@ -2327,30 +2417,30 @@ class MainWindow(tk.Tk):
     Main window class
     
     Attributes:
-        image_paths: path(s) to image(s).
-        annotation_paths: path(s) to annotations(s).
-        output_directory: directory for saving the annotations.
-        extension: datatype for saving the annotation.
-        rotate_portrait: indicates whether images in portrait mode 
-                         are rotated 90 degrees for annotation.
-        add_layers: indicates whether extra layers for annotation
-                    can be added by the user while annotating.
-        autosave: indicates whether annotations are automatically saved 
-                  before going to the previous or next image.
-        image_index: index value for images.
-        layers: layer tracker object names for all annotation layers.
-        drawing_mode: indicates whether the draw mode is activated.
-        hide_annotation: indicates whether hiding annotations is activated.
-        auto_fill: indicates whether auto fill for annotation is activated.
-        threshold: value for threshold.
-        erase_only_thresholding: indicates whether thresholding can only erase.
-        closing_after_thresholding: indicates whether closing after thresholding 
-                                    is performed.
-        foreground_opacity: value for foreground opacity.
-        background_opacity: value for background opacity.
-        foreground_color: RGB values for foreground color.
-        background_color: RGB values for background color.
-        canvas_dimensions: height and width of canvas.
+        image_paths:  Path(s) to image(s).
+        annotation_paths:  Path(s) to annotations(s).
+        output_directory:  Directory for saving the annotations.
+        extension:  Datatype for saving the annotation.
+        rotate_portrait:  Indicates whether images in portrait mode are rotated 
+            90 degrees for annotation.
+        add_layers: Indicates whether extra layers for annotation can be added 
+            by the user while annotating.
+        autosave: Indicates whether annotations are automatically saved before 
+            going to the previous or next image.
+        image_index:  Index value for images.
+        layers:  Layer tracker object names for all annotation layers.
+        drawing_mode:  Indicates whether the draw mode is activated.
+        hide_annotation:  Indicates whether hiding annotations is activated.
+        auto_fill:  Indicates whether auto fill for annotation is activated.
+        threshold:  Value for threshold.
+        erase_only_thresholding:  Indicates whether thresholding can only erase.
+        closing_after_thresholding:  Indicates whether closing after thresholding 
+            is performed.
+        foreground_opacity:  Value for foreground opacity.
+        background_opacity:  Value for background opacity.
+        foreground_color:  RGB values for foreground color.
+        background_color:  RGB values for background color.
+        canvas_dimensions:  Height and width of canvas.
     """
     # default values for settings
     __initial_drawing_mode = True
@@ -2389,18 +2479,18 @@ class MainWindow(tk.Tk):
         Initialize all widgets that are part of the main window.
         
         Args:
-            image_paths: path(s) to image(s).
-            annotation_paths: path(s) to annotations(s).
-            output_directory: directory for saving the annotations.
-            extension: datatype for saving the annotation.
-            layers: names for all annotation layers.
-            rotate_portrait: indicates whether images in portrait mode 
-                             are rotated 90 degrees for annotation.
-            add_layers: indicates whether extra layers for annotation
-                        can be added by the user while annotating.
-            autosave: indicates whether annotations are automatically saved 
-                      before going to the previous or next image.
-            theme: indicates whether the light or dark theme is used.
+            image_paths:  Path(s) to image(s).
+            annotation_paths:  Path(s) to annotations(s).
+            output_directory:  Directory for saving the annotations.
+            extension:  Datatype for saving the annotation.
+            layers:  Names for all annotation layers.
+            rotate_portrait:  Indicates whether images in portrait mode are 
+                rotated 90 degrees for annotation.
+            add_layers:  Indicates whether extra layers for annotation can be 
+                added by the user while annotating.
+            autosave:  Indicates whether annotations are automatically saved 
+                before going to the previous or next image.
+            theme:  Indicates whether the light or dark theme is used.
         """
         super().__init__()
         
@@ -2446,7 +2536,6 @@ class MainWindow(tk.Tk):
         self.geometry(
             f'{window_width}x{window_height}+{left_window_offset}+{top_window_offset}'
         )
-
         # get the height of the main window title bar
         self.update_idletasks()
         if platform.system() == 'Windows':
@@ -2533,17 +2622,18 @@ class MainWindow(tk.Tk):
         self.bind('<KeyPress>', self.__keypress)
         self.bind('<Configure>', self.__resize_action)
         
+
     def __keypress(self, event: tkinter.Event) -> None:                                   
         """
         Perform an action that corresponds to a particular key press:
-            <d>: switch between inspection and drawing mode
-            <r>: reset the view (zoom and location) to the default
-            <f>: change the auto fill configuration
-            <z>: undo annotation
-            <t>: create annotation by thresholding the image
-            <v>: change the visibility of the annotation
-            <c>: clear the canvas with annotation
-            <s>: save annotations as image(s)
+            <d>: Switch between inspection and drawing mode.
+            <r>: Reset the view (zoom and location) to the default.
+            <f>: Change the auto fill configuration.
+            <z>: Undo annotation.
+            <t>: Create annotation by thresholding the image.
+            <v>: Change the visibility of the annotation.
+            <c>: Clear the canvas with annotation.
+            <s>: Save annotations as image(s).
         """
         if event.keysym_num == 100:  # <d>
             self.control_buttons.switch_mode()
@@ -2574,8 +2664,8 @@ class MainWindow(tk.Tk):
 
     def __resize_action(self, event: tkinter.Event) -> None:
         """
-        Resize the canvas with image and the layer buttons 
-        in response to a change in the window size.
+        Resize the canvas with image and the layer buttons in response to a 
+        change in the window size.
         """     
         # first close the settings window if it is open
         if self.active_settings_window:
@@ -2593,13 +2683,20 @@ class MainWindow(tk.Tk):
         # resize the layer buttons container
         self.layer_buttons.resize_canvas()
 
+
     def get_header_height(self) -> int:
-        """ Return the height of the header."""
+        """ 
+        Return the height of the header.
+        """
         return self.control_buttons.container.winfo_height()
 
+
     def get_header_padding(self) -> int:
-        """ Return the height of the header."""
+        """ 
+        Return the height of the header.
+        """
         return int(self.__padding_to_screen_height_ratio*self.winfo_screenheight())
+
 
     def get_available_width(self) -> float:
         """
@@ -2628,17 +2725,17 @@ class AnnotationTool:
         Initialize the main window for the annotation tool.
         
         Args:
-            input_paths: path(s) to image(s) and optionally annotation(s).
-            layers: names for all annotation layers.
-            output_directory: directory for saving the annotations.
-            extension: datatype for saving the annotation.
-            rotate_portrait: indicates whether images in portrait mode 
-                             are rotated 90 degrees for annotation.
-            add_layers: indicates whether extra layers for annotation
-                        can be added by the user while annotating.
-            autosave: indicates whether annotations are automatically saved 
-                      before going to the previous or next image.
-            theme: indicates whether the light or dark theme is used.
+            input_paths:  Path(s) to image(s) and optionally annotation(s).
+            layers:  Names for all annotation layers.
+            output_directory:  Directory for saving the annotations.
+            extension:  Datatype for saving the annotation.
+            rotate_portrait:  Indicates whether images in portrait mode are 
+                rotated 90 degrees for annotation.
+            add_layers:  Indicates whether extra layers for annotation can be 
+                added by the user while annotating.
+            autosave:  Indicates whether annotations are automatically saved 
+                before going to the previous or next image.
+            theme: Indicates whether the light or dark theme is used.
         """
         # format and check layer names
         if isinstance(layers, str):
@@ -2724,6 +2821,7 @@ class AnnotationTool:
         # start the mainloop
         self.__window.after(10, self.__window.canvas.reset_view)
         self.__window.mainloop()
+
 
     def __on_close(self) -> None:
         """
