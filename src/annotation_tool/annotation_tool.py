@@ -2512,7 +2512,7 @@ class MainWindow(tk.Tk):
             icon = ImageTk.PhotoImage(
                 Image.open(path).resize(
                     tuple([icon_size]*2), # height == width
-                    Image.ANTIALIAS,
+                    Image.LANCZOS,
                 ),
             )
             self.icons[button_name] = icon
