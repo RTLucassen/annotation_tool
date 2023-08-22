@@ -39,10 +39,8 @@ class Buffer:
         self.__buffer = []
         self.__maximum_buffer = maximum_buffer
     
-
     def __len__(self):
         return len(self.__buffer)
-
 
     def add(self, item: Any, category: str) -> None:
         """
@@ -58,7 +56,6 @@ class Buffer:
         # remove earliest items if the buffer exceeds the maximum size
         while len(self.__buffer) > self.__maximum_buffer:
             self.__buffer = self.__buffer[1:]
-
 
     def get(self, selected_category: str) -> Optional[Any]:
         """ 
@@ -79,7 +76,6 @@ class Buffer:
                 if self.__buffer[-i][1] == selected_category:
                     return self.__buffer.pop(-i)[0]
             return None
-
 
     def clear(self) -> None:
         self.__buffer = []
@@ -102,22 +98,17 @@ class LayerTracker:
         self.__count = 0
         self.__combine_lists()
     
-
     def __len__(self) -> int:
         return len(self.__defined_layers)+len(self.__extra_layers)
     
-
     def __getitem__(self, index: int) -> str:
         return self.__all_layers[index]
     
-
     def __add__(self, items: list[str]) -> list[str]:
         return self.__all_layers+items
 
-
     def __combine_lists(self):
         self.__all_layers = self.__defined_layers + self.__extra_layers
-
 
     def index(self, layer: str) -> int:
         return self.__all_layers.index(layer)
@@ -130,7 +121,6 @@ class LayerTracker:
     def extra(self) -> list[str]:
         return self.__extra_layers
 
-
     def add_extra_layer(self) -> str:
         """ 
         Adds extra layer with the next number.
@@ -142,7 +132,6 @@ class LayerTracker:
 
         return layer
 
-
     def remove_extra_layer(self, layer: str) -> None:
         """
         Remove extra layer with the specified name.
@@ -152,7 +141,6 @@ class LayerTracker:
         """
         self.__extra_layers.remove(layer)
         self.__combine_lists()
-
 
     def remove_extra_layers(self) -> None:
         """ Remove all extra layers and reset the count."""
