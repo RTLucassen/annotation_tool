@@ -1,6 +1,9 @@
 # Annotation Tool
 A simple graphical user interface (GUI) for bitmap image annotation in Python using 
 [Tkinter](https://docs.python.org/3/library/tkinter.html).
+<div align="center">
+  <img width="100%" alt="Demo" src=".github\demo.gif">
+</div>
 
 ## Installing the Annotation Tool
 The annotation tool can be installed from GitHub:
