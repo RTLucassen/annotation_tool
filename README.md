@@ -13,7 +13,8 @@ $ pip install git+https://github.com/RTLucassen/annotation_tool
 
 ## Example
 A minimal example of how the annotation tool can be used.
-```
+
+```python
 from annotation_tool import AnnotationTool
 
 # define the image paths and layer names / classes
