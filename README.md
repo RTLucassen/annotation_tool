@@ -22,7 +22,7 @@ paths = ['image1.png', 'image2.png']
 layer_names = ['foreground', 'background']
 
 # start annotating
-AnnotationTool(image_paths=paths, layer_names=layer_names)     
+AnnotationTool(input_paths=paths, layers=layer_names)     
 ```
 
 ## Buttons and Keyboard Shortcuts
