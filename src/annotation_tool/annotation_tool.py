@@ -745,7 +745,7 @@ class CanvasImage:
         self.__image_path = self.parent.image_paths[index]
         self.__original_image = Image.open(self.__image_path) 
         self.__imwidth, self.__imheight = self.__original_image.size
-        
+
         # optionally rotate the image if it is in portrait mode
         if self.__imheight > self.__imwidth and self.parent.rotate_portrait:
             self.__original_image = self.__original_image.transpose(
@@ -756,17 +756,21 @@ class CanvasImage:
         else:
             self.__rotated = False
         
+        # apply gamma correction
+        self.__gamma_image = self.__original_image.point(
+            lambda x: ((x/255)**self.parent.gamma)*255
+        )
         # initialize instance attributes for a gray and colored image version 
-        self.__original_image_gray = self.__original_image.convert('L')
-        self.__original_image_sat = self.__original_image.convert('HSV').split()[1]
-        self.__foreground_color_image = self.__original_image.convert(
+        self.__gamma_image_gray = self.__gamma_image.convert('L')
+        self.__gamma_image_sat = self.__gamma_image.convert('HSV').split()[1]
+        self.__foreground_color_image = self.__gamma_image.convert(
             'RGB',
             create_color_matrix(
                 self.parent.foreground_color, 
                 self.parent.foreground_opacity,
             )
         )
-        self.__background_color_image = self.__original_image.convert(
+        self.__background_color_image = self.__gamma_image.convert(
             'RGB', 
             create_color_matrix(
                 self.parent.background_color, 
@@ -873,7 +877,7 @@ class CanvasImage:
         self.__buffer.clear()
         if self.parent.hide_annotation:
             # replace the annotated image with the original image
-            self.__image = self.__original_image.copy()
+            self.__image = self.__gamma_image.copy()
         else:
             # create the image combined with the annotation
             self.__image = ImageChops.composite(
@@ -980,7 +984,7 @@ class CanvasImage:
             self.__annotations[self.__selected_layer] = (new_draw, new_annotation)
             
             # create the image combined with the annotation
-            self.__image = self.__original_image.copy()
+            self.__image = self.__gamma_image.copy()
             
             # show the updated annotation on top of the original image     
             self.__show_image()
@@ -1003,11 +1007,11 @@ class CanvasImage:
             threshold = self.parent.threshold
             values = (255, 0) if self.parent.invert_thresholding else (0, 255)
             if self.parent.image_for_thresholding == 'grayscale':
-                thresholded_image = self.__original_image_gray.point(
+                thresholded_image = self.__gamma_image_gray.point(
                 lambda p: values[0] if p < threshold*255 else values[1]
                 )
             elif self.parent.image_for_thresholding == 'saturation':
-                thresholded_image = self.__original_image_sat.point(
+                thresholded_image = self.__gamma_image_sat.point(
                     lambda p: values[0] if p < threshold*255 else values[1]
                 )
             else:
@@ -1086,7 +1090,7 @@ class CanvasImage:
 
         if self.parent.hide_annotation:
             # replace the annotated image with the original image
-            self.__image = self.__original_image.copy()
+            self.__image = self.__gamma_image.copy()
             # show the annotation on top of the original image     
             self.__show_image()
         else:
@@ -1110,24 +1114,29 @@ class CanvasImage:
         if not self.__image_loaded: return
 
         # create a new version of the foreground or background color image
+        updated = False
         if 'foreground' in level:
-            self.__foreground_color_image = self.__original_image.convert(
+            self.__foreground_color_image = self.__gamma_image.convert(
                 'RGB', 
                 create_color_matrix(
                     self.parent.foreground_color, 
                     self.parent.foreground_opacity,
                 )
             )
-        elif 'background' in level:
-            self.__background_color_image = self.__original_image.convert(
+            updated = True
+        if 'background' in level:
+            self.__background_color_image = self.__gamma_image.convert(
                 'RGB', 
                 create_color_matrix(
                     self.parent.background_color, 
                     self.parent.background_opacity,
                 )
             )
-        else:
+            updated = True
+
+        if not updated:
             raise ValueError('Invalid argument for level.')
+        
         # create the image combined with the annotation
         self.__image = ImageChops.composite(
             self.__foreground_color_image, 
@@ -1136,6 +1145,19 @@ class CanvasImage:
         )
         # show the updated annotation on top of the original image        
         self.__show_image()
+
+    def update_gamma(self) -> None:
+        """
+        Update the gamma correction to the image.
+        """       
+        # create the gamma corrected images
+        self.__gamma_image = self.__original_image.point(
+            lambda x: ((x/255)**self.parent.gamma)*255
+        )
+        self.__gamma_image_gray = self.__gamma_image.convert('L')
+        self.__gamma_image_sat = self.__gamma_image.convert('HSV').split()[1]
+        # update the forground and background images using the gamma corrected image
+        self.update_color('foreground & background')
 
     def reset_view(self) -> None:
         """
@@ -1974,7 +1996,7 @@ class SettingsWindow(tk.Toplevel):
         window:  Top level window. 
     """
     # default values for layout
-    __height_window_to_screen_ratio = 0.58
+    __height_window_to_screen_ratio = 0.65
     __width_to_height_ratio = 0.52
 
     def __init__(self, parent: tkinter.Tk) -> None:
@@ -2017,144 +2039,174 @@ class SettingsWindow(tk.Toplevel):
 
         # configure the grid
         for i in range(3): self.columnconfigure(i, weight=1)
-        for j in range(16): self.rowconfigure(j, weight=1)
+        for j in range(22): self.rowconfigure(j, weight=1)
  
-        # initialize and position the settings label
-        self.__settings_label = ttk.Label(self, text='Thresholding', 
-                                          font=header_font)
-        self.__settings_label.grid(row=0, column=0, columnspan=3,
-                                   padx=20, pady=(10, 0), sticky='sw')
+        index = 0
+        order = [
+            ('Image', True), 
+            ('Foreground', True), 
+            ('Background', True), 
+            ('Thresholding', False),
+        ]
+        for category, add_seperator in order:
+            if category == 'Thresholding':
+                # initialize and position the settings label
+                self.__settings_label = ttk.Label(self, text='Thresholding', 
+                                                font=header_font)
+                self.__settings_label.grid(row=index, column=0, columnspan=3,
+                                           padx=20, pady=(10, 0), sticky='sw')
 
-        self.__radio_buttons = ttk.Frame(self)
-        self.__radio_buttons_var = tk.StringVar(value=self.parent.image_for_thresholding)
-        self.__radio_button_gray = ttk.Radiobutton(self.__radio_buttons, 
-                                                   text='Grayscale',
-                                                   value='grayscale',
-                                                   variable=self.__radio_buttons_var,
-                                                   command=self.update_threshold_image, 
-                                                   style='text.TRadiobutton')
-        self.__radio_button_gray.grid(row=0, column=0, sticky='w', padx=(0, 20))
-        self.__radio_button_sat = ttk.Radiobutton(self.__radio_buttons,
-                                                  text='Saturation',
-                                                  value='saturation',
-                                                  variable=self.__radio_buttons_var,
-                                                  command=self.update_threshold_image, 
-                                                  style='text.TRadiobutton')
-        self.__radio_button_sat.grid(row=0, column=1, sticky='e')
-        self.__radio_buttons.grid(row=1, column=0, columnspan=3, padx=20,
-                                  pady=(0, 5), sticky='ew')
+                self.__radio_buttons = ttk.Frame(self)
+                self.__radio_buttons_var = tk.StringVar(value=self.parent.image_for_thresholding)
+                self.__radio_button_gray = ttk.Radiobutton(self.__radio_buttons, 
+                                                           text='Grayscale',
+                                                           value='grayscale',
+                                                           variable=self.__radio_buttons_var,
+                                                           command=self.update_threshold_image, 
+                                                           style='text.TRadiobutton')
+                self.__radio_button_gray.grid(row=0, column=0, sticky='w', padx=(0, 20))
+                self.__radio_button_sat = ttk.Radiobutton(self.__radio_buttons,
+                                                          text='Saturation',
+                                                          value='saturation',
+                                                          variable=self.__radio_buttons_var,
+                                                          command=self.update_threshold_image, 
+                                                          style='text.TRadiobutton')
+                self.__radio_button_sat.grid(row=0, column=1, sticky='e')
+                self.__radio_buttons.grid(row=index+1, column=0, columnspan=3, 
+                                          padx=20, pady=(0, 5), sticky='ew')
 
-        # initialize and position the threshold label and slider
-        self.__threshold_label = ttk.Label(self, font=font, 
-                                           text=f'Threshold: {self.parent.threshold:0.2f}')
-        self.__threshold_label.grid(row=2, column=0, columnspan=3, 
-                                    padx=20, pady=0, sticky='w')
-        self.__threshold = tk.DoubleVar(value=self.parent.threshold)
-        self.__threshold_slider = ttk.Scale(self, from_=0.0, to=1.0, 
-            variable=self.__threshold, command=lambda event: self.update_threshold())
-        self.__threshold_slider.grid(row=3, column=0, columnspan=3, 
-                                     padx=20, pady=0, sticky='ew')
+                # initialize and position the threshold label and slider
+                self.__threshold_label = ttk.Label(self, font=font, 
+                                                text=f'Threshold: {self.parent.threshold:0.2f}')
+                self.__threshold_label.grid(row=index+2, column=0, columnspan=3, 
+                                            padx=20, pady=0, sticky='w')
+                self.__threshold = tk.DoubleVar(value=self.parent.threshold)
+                self.__threshold_slider = ttk.Scale(self, from_=0.0, to=1.0, 
+                    variable=self.__threshold, command=lambda event: self.update_threshold())
+                self.__threshold_slider.grid(row=index+3, column=0, columnspan=3, 
+                                            padx=20, pady=0, sticky='ew')
 
-        # initialize and position checkboxes for thresholding settings
-        self.__invert_var = tk.BooleanVar(value=self.parent.invert_thresholding)
-        self.__invert_checkbox = ttk.Checkbutton(self, text='Invert', 
-                                                  variable=self.__invert_var,
-                                                  onvalue=True, offvalue=False,
-                                                  command=self.update_checkboxes,
-                                                  style='Switch.TCheckbutton')     
-        self.__invert_checkbox.grid(row=4, column=0, columnspan=3, 
-                                    padx=20, pady=0, sticky='w')
-        
-        self.__erase_only_var = tk.BooleanVar(value=self.parent.erase_only_thresholding)
-        self.__erase_only_checkbox = ttk.Checkbutton(self, text='Erase only',
-                                                     variable=self.__erase_only_var,
-                                                     onvalue=True, offvalue=False,
-                                                     command=self.update_checkboxes,
-                                                     style='Switch.TCheckbutton')
-        self.__erase_only_checkbox.grid(row=5, column=0, columnspan=3, 
+                # initialize and position checkboxes for thresholding settings
+                self.__invert_var = tk.BooleanVar(value=self.parent.invert_thresholding)
+                self.__invert_checkbox = ttk.Checkbutton(self, text='Invert', 
+                                                         variable=self.__invert_var,
+                                                         onvalue=True, offvalue=False,
+                                                         command=self.update_checkboxes,
+                                                         style='Switch.TCheckbutton')     
+                self.__invert_checkbox.grid(row=index+4, column=0, columnspan=3, 
+                                            padx=20, pady=0, sticky='w')
+                
+                self.__erase_only_var = tk.BooleanVar(value=self.parent.erase_only_thresholding)
+                self.__erase_only_checkbox = ttk.Checkbutton(self, text='Erase only',
+                                                             variable=self.__erase_only_var,
+                                                             onvalue=True, offvalue=False,
+                                                             command=self.update_checkboxes,
+                                                             style='Switch.TCheckbutton')
+                self.__erase_only_checkbox.grid(row=index+5, column=0, columnspan=3, 
+                                                padx=20, pady=0, sticky='w')
+                
+                self.__closing_var = tk.BooleanVar(value=self.parent.closing_after_thresholding)
+                self.__closing_checkbox = ttk.Checkbutton(self, text='Fill holes', 
+                                                          variable=self.__closing_var,
+                                                          onvalue=True, offvalue=False,
+                                                          command=self.update_checkboxes,
+                                                          style='Switch.TCheckbutton')     
+                self.__closing_checkbox.grid(row=index+6, column=0, columnspan=3, 
+                                            padx=20, pady=0, sticky='w')
+
+                # initialize and position the tolerance label and slider
+                self.__tolerance_label = ttk.Label(self, font=font,
+                                                text=f'Tolerance: {self.parent.tolerance:0.2f}')
+                self.__tolerance_label.grid(row=index+7, column=0, columnspan=3, 
+                                            padx=20, pady=0, sticky='w')
+                self.__tolerance = tk.DoubleVar(value=self.parent.tolerance)
+                self.__tolerance_slider = ttk.Scale(self, from_=0.0, to=1.0, 
+                                                    variable=self.__tolerance, 
+                                                    command=lambda event: self.update_tolerance())
+                self.__tolerance_slider.grid(row=index+8, column=0, columnspan=3, 
+                                            padx=20, pady=(0, 5), sticky='ew')
+                index += 9
+
+            elif category == 'Foreground':        
+                # initialize and position the foreground label
+                self.__fg_label = ttk.Label(self, text='Foreground', font=header_font)
+                self.__fg_label.grid(row=index, column=0, columnspan=3, 
+                                     padx=20, pady=(10, 0), sticky='sw')
+                
+                # initialize and position the foreground opacity label and slider
+                self.__fg_opacity_label = ttk.Label(self, text='Opacity', font=font)
+                self.__fg_opacity_label.grid(row=index+1, column=0, columnspan=3, 
+                                             padx=20, pady=0, sticky='w')
+                self.__fg_opacity = tk.DoubleVar(value=self.parent.foreground_opacity)
+                self.__fg_opacity_slider = ttk.Scale(self, from_=0.0, to=1.0, 
+                                                    variable=self.__fg_opacity)
+                self.__fg_opacity_slider.grid(row=index+2, column=0, columnspan=3,  
+                                              padx=20, pady=0, sticky='ew')
+                self.__fg_opacity_slider.bind('<ButtonRelease>', 
+                    lambda event: self.update_color('foreground'))
+
+                # initialize and position the foreground color label and picker
+                self.__fg_color_label = ttk.Label(self, text='Color', font=font)
+                self.__fg_color_label.grid(row=index+3, column=0, columnspan=3, 
+                                           padx=20, pady=0, sticky='w')
+                self.__fg_color_picker = ColorPicker(self, 'foreground')
+                self.__fg_color_picker.grid(row=index+4, column=0, columnspan=3, 
+                                            padx=20, pady=(0, 5), sticky='ew')
+                index += 5
+
+            elif category == 'Background':
+                # initialize and position the background label
+                self.__bg_label = ttk.Label(self, text='Background', font=header_font)
+                self.__bg_label.grid(row=index, column=0, columnspan=3, 
+                                    padx=20, pady=(10, 0), sticky='sw')
+                
+                # initialize and position the background opacity label and slider
+                self.__bg_opacity_label = ttk.Label(self, text='Opacity', font=font)
+                self.__bg_opacity_label.grid(row=index+1, column=0, columnspan=3, 
+                                            padx=20, pady=0, sticky='w')
+                self.__bg_opacity = tk.DoubleVar(value=self.parent.background_opacity)
+                self.__bg_opacity_slider = ttk.Scale(self, from_=0.0, to=1.0, 
+                                                    variable=self.__bg_opacity)
+                self.__bg_opacity_slider.grid(row=index+2, column=0, columnspan=3, 
+                                            padx=20, pady=0, sticky='ew')
+                self.__bg_opacity_slider.bind('<ButtonRelease>', 
+                                            lambda event: self.update_color('background'))
+
+                # initialize and position the background color label and picker
+                self.__bg_color_label = ttk.Label(self, text='Color', font=font)
+                self.__bg_color_label.grid(row=index+3, column=0, columnspan=3, 
                                         padx=20, pady=0, sticky='w')
-        
-        self.__closing_var = tk.BooleanVar(value=self.parent.closing_after_thresholding)
-        self.__closing_checkbox = ttk.Checkbutton(self, text='Fill holes', 
-                                                  variable=self.__closing_var,
-                                                  onvalue=True, offvalue=False,
-                                                  command=self.update_checkboxes,
-                                                  style='Switch.TCheckbutton')     
-        self.__closing_checkbox.grid(row=6, column=0, columnspan=3, 
-                                     padx=20, pady=0, sticky='w')
+                self.__bg_color_picker = ColorPicker(self, 'background')
+                self.__bg_color_picker.grid(row=index+4, column=0, columnspan=3, 
+                                            padx=20, pady=(0, 5), sticky='ew')
+                index += 5
 
-        # initialize and position the tolerance label and slider
-        self.__tolerance_label = ttk.Label(self, font=font,
-                                           text=f'Tolerance: {self.parent.tolerance:0.2f}')
-        self.__tolerance_label.grid(row=7, column=0, columnspan=3, 
-                                    padx=20, pady=0, sticky='w')
-        self.__tolerance = tk.DoubleVar(value=self.parent.tolerance)
-        self.__tolerance_slider = ttk.Scale(self, from_=0.0, to=1.0, 
-            variable=self.__tolerance, command=lambda event: self.update_tolerance())
-        self.__tolerance_slider.grid(row=8, column=0, columnspan=3, 
-                                     padx=20, pady=0, sticky='ew')
-
-        # add sliders for changing the opacity and color of the foreground
-        # initialize and position the first separator
-        self.__separator_1 = ttk.Separator(self, orient='horizontal')
-        self.__separator_1.grid(row=9, column=0, columnspan=3, 
-                                padx=0, pady=5, sticky='ew')
-        
-        # initialize and position the foreground label
-        self.__fg_label = ttk.Label(self, text='Foreground', font=header_font)
-        self.__fg_label.grid(row=10, column=0, columnspan=3, 
-                             padx=20, pady=(10, 0), sticky='sw')
-        
-        # initialize and position the foreground opacity label and slider
-        self.__fg_opacity_label = ttk.Label(self, text='Opacity', font=font)
-        self.__fg_opacity_label.grid(row=11, column=0, columnspan=3, 
-                                     padx=20, pady=0, sticky='w')
-        self.__fg_opacity = tk.DoubleVar(value=self.parent.foreground_opacity)
-        self.__fg_opacity_slider = ttk.Scale(self, from_=0.0, to=1.0, 
-                                             variable=self.__fg_opacity)
-        self.__fg_opacity_slider.grid(row=12, column=0, columnspan=3,  
-                                      padx=20, pady=0, sticky='ew')
-        self.__fg_opacity_slider.bind('<ButtonRelease>', 
-            lambda event: self.update_color('foreground'))
-
-        # initialize and position the foreground color label and picker
-        self.__fg_color_label = ttk.Label(self, text='Color', font=font)
-        self.__fg_color_label.grid(row=13, column=0, columnspan=3, 
-                                   padx=20, pady=0, sticky='w')
-        self.__fg_color_picker = ColorPicker(self, 'foreground')
-        self.__fg_color_picker.grid(row=14, column=0, columnspan=3, 
-                                    padx=20, pady=(0, 5), sticky='ew')
-
-        # add slides for changing the opacity and color of the background
-        # initialize and position the second separator
-        self.__seperator_2 = ttk.Separator(self, orient='horizontal')
-        self.__seperator_2.grid(row=15, column=0, columnspan=3, 
-                                padx=0, pady=5, sticky='ew')
-
-        # initialize and position the background label
-        self.__bg_label = ttk.Label(self, text='Background', font=header_font)
-        self.__bg_label.grid(row=16, column=0, columnspan=3, 
-                             padx=20, pady=(10, 0), sticky='sw')
-        
-        # initialize and position the background opacity label and slider
-        self.__bg_opacity_label = ttk.Label(self, text='Opacity', font=font)
-        self.__bg_opacity_label.grid(row=17, column=0, columnspan=3, 
-                                     padx=20, pady=0, sticky='w')
-        self.__bg_opacity = tk.DoubleVar(value=self.parent.background_opacity)
-        self.__bg_opacity_slider = ttk.Scale(self, from_=0.0, to=1.0, 
-                                             variable=self.__bg_opacity)
-        self.__bg_opacity_slider.grid(row=18, column=0, columnspan=3, 
-                                      padx=20, pady=0, sticky='ew')
-        self.__bg_opacity_slider.bind('<ButtonRelease>', 
-                                      lambda event: self.update_color('background'))
-
-        # initialize and position the background color label and picker
-        self.__bg_color_label = ttk.Label(self, text='Color', font=font)
-        self.__bg_color_label.grid(row=19, column=0, columnspan=3, 
-                                   padx=20, pady=0, sticky='w')
-        self.__bg_color_picker = ColorPicker(self, 'background')
-        self.__bg_color_picker.grid(row=20, column=0, columnspan=3, 
-                                    padx=20, pady=(0, 10), sticky='ew')
+            elif category == 'Image':
+                # initialize and position the settings label
+                self.__image_label = ttk.Label(self, text='Image', font=header_font)
+                self.__image_label.grid(row=index, column=0, columnspan=3,
+                                        padx=20, pady=(10, 0), sticky='sw')
+                
+                # initialize and position the gamma label and slider
+                self.__gamma_label = ttk.Label(self, font=font, 
+                                            text=f'Gamma: {self.parent.gamma:0.1f}')
+                self.__gamma_label.grid(row=index+1, column=0, columnspan=3, 
+                                        padx=20, pady=0, sticky='w')
+                self.__gamma = tk.DoubleVar(value=self.parent.gamma)
+                self.__gamma_slider = ttk.Scale(self, from_=0.5, to=3.0, 
+                                                variable=self.__gamma, 
+                                                command=lambda event: self.update_gamma())
+                self.__gamma_slider.grid(row=index+2, column=0, columnspan=3, 
+                                        padx=20, pady=(0, 5), sticky='ew')
+                self.__gamma_slider.bind('<ButtonRelease>', lambda event: self.parent.canvas.update_gamma())
+                index += 3
+            
+            if add_seperator:
+                # initialize and position the second separator
+                self.__seperator = ttk.Separator(self, orient='horizontal')
+                self.__seperator.grid(row=index, column=0, columnspan=3, 
+                                    padx=0, pady=5, sticky='ew')
+                index += 1
 
         # window is closed when mouse leaves settings window
         self.bind('<Leave>', self.__close)
@@ -2218,6 +2270,13 @@ class SettingsWindow(tk.Toplevel):
         """
         self.parent.tolerance = self.__tolerance.get()
         self.__tolerance_label.configure(text=f'Tolerance: {self.parent.tolerance:0.2f}')
+
+    def update_gamma(self) -> None:
+        """ 
+        Update the state attribute with the current gamma slider value.
+        """
+        self.parent.gamma = self.__gamma.get()
+        self.__gamma_label.configure(text=f'Gamma: {self.parent.gamma:0.1f}')
 
 
 class ColorPicker:
@@ -2376,6 +2435,7 @@ class MainWindow(tk.Tk):
     __initial_erase_only_thresholding = False
     __initial_closing_after_thresholding = False
     __initial_tolerance = 0.85
+    __initial_gamma = 1.0
     __initial_foreground_opacity = 0.5
     __initial_background_opacity = 0.0
     __initial_foreground_color = [0.0, 1.0, 1.0]
@@ -2489,6 +2549,7 @@ class MainWindow(tk.Tk):
         self.auto_fill = self.__initial_auto_fill
         self.threshold = self.__initial_threshold
         self.tolerance = self.__initial_tolerance
+        self.gamma = self.__initial_gamma
         self.foreground_opacity = self.__initial_foreground_opacity
         self.background_opacity = self.__initial_background_opacity
         self.foreground_color = self.__initial_foreground_color
